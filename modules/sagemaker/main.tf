@@ -21,9 +21,9 @@ resource "aws_iam_role_policy_attachment" "sagemaker_access" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
-# Attach S3 access to model artifact bucket
-resource "aws_iam_policy" "sagemaker_s3_access" {
-  name = "sagemaker-s3-bucket-access"
+# Attach S3 and CloudWatch access
+resource "aws_iam_policy" "sagemaker_s3_cloudwatch_access" {
+  name = "sagemaker-s3-cloudwatch-access"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -32,20 +32,31 @@ resource "aws_iam_policy" "sagemaker_s3_access" {
         Effect = "Allow",
         Action = [
           "s3:GetObject",
-          "s3:ListBucket"
+          "s3:ListBucket",
+          "s3:PutObject"
         ],
         Resource = [
           "arn:aws:s3:::mode-artifacts-bucket-1",
           "arn:aws:s3:::mode-artifacts-bucket-1/*"
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "cloudwatch:PutMetricData",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "attach_s3_access" {
+resource "aws_iam_role_policy_attachment" "attach_s3_cloudwatch_access" {
   role       = aws_iam_role.sagemaker_exec.name
-  policy_arn = aws_iam_policy.sagemaker_s3_access.arn
+  policy_arn = aws_iam_policy.sagemaker_s3_cloudwatch_access.arn
 }
 
 # SageMaker Model using container + model data
@@ -56,9 +67,9 @@ resource "aws_sagemaker_model" "llm_model" {
   primary_container {
     image          = var.model_image
     model_data_url = var.model_data_url
-     environment = {
-      SAGEMAKER_PROGRAM           = "serve.py"
-      SAGEMAKER_SUBMIT_DIRECTORY  = var.model_data_url
+    environment = {
+      SAGEMAKER_PROGRAM          = "serve.py"
+      SAGEMAKER_SUBMIT_DIRECTORY = "${var.model_data_url}/code"
     }
   }
 }
@@ -71,7 +82,7 @@ resource "aws_sagemaker_endpoint_configuration" "llm_config" {
     variant_name           = "AllTraffic"
     model_name             = aws_sagemaker_model.llm_model.name
     initial_instance_count = 1
-    instance_type          = "ml.t2.medium"
+    instance_type          = "ml.g5.xlarge"  # Upgraded for LLMs
   }
 }
 

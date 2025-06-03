@@ -1,20 +1,52 @@
-# serve.py
-from flask import Flask, request, jsonify
+
+from flask import Flask, request, Response, jsonify
 from interface import model_fn, predict_fn
+import logging
+import sys
+
+# Configure logging for CloudWatch
+logging.basicConfig(
+    stream=sys.stdout,
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-model = model_fn("/opt/ml/model")
+model = None
 
-@app.route("/invocations", methods=["POST"])
-def invoke():
-    data = request.get_json()
-    prediction = predict_fn(data, model)
-    return jsonify(prediction)
+# Load model at startup
+try:
+    logger.info("Loading model from /opt/ml/model")
+    model = model_fn("/opt/ml/model")
+    logger.info("Model loaded successfully")
+except Exception as e:
+    logger.error(f"Failed to load model: {str(e)}")
 
 @app.route("/ping", methods=["GET"])
 def ping():
-    return "pong", 200
+    logger.info("Ping endpoint called")
+    # Return 200 to pass health check, even if model is not loaded
+    return Response("pong", status=200)
+
+@app.route("/invocations", methods=["POST"])
+def invoke():
+    logger.info("Invocations endpoint called")
+    if model is None:
+        logger.error("Model not loaded")
+        return Response("Model not loaded", status=500)
+    try:
+        data = request.get_json()
+        if not data:
+            logger.error("No input data provided")
+            return Response("No input data provided", status=400)
+        prediction = predict_fn(data, model)
+        logger.info("Inference completed successfully")
+        return jsonify(prediction)
+    except Exception as e:
+        logger.error(f"Inference error: {str(e)}")
+        return Response(f"Inference error: {str(e)}", status=500)
 
 if __name__ == "__main__":
+    logger.info("Starting Flask server on port 8080")
     app.run(host="0.0.0.0", port=8080)
-
