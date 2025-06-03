@@ -1,13 +1,22 @@
-FROM python:3.9-slim
+FROM pytorch/pytorch:2.1.0-cuda11.8-cudnn8-runtime
 
-RUN pip install --upgrade pip
-COPY model /opt/program/model
+# Create working directory for inference code
+WORKDIR /opt/program
 
-WORKDIR /opt/program/model
+# Install Python packages
+COPY code/requirements.txt .
+RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-RUN pip install -r requirements.txt
+# Copy source code (e.g., serve.py and interface.py)
+COPY code/serve.py code/interface.py . 
+
+# Install Flask (if not in requirements.txt)
+RUN pip install flask
+
+# Required env for SageMaker inference
 ENV PYTHONUNBUFFERED=TRUE
 
-ENV SAGEMAKER_PROGRAM=inference.py
+# Required for SageMaker to run your container
+ENTRYPOINT ["python"]
+CMD ["serve.py"]
 
-ENTRYPOINT ["python", "inference.py"]

@@ -11,7 +11,7 @@ module "lambda" {
   source = "./modules/lambda"
 
   sagemaker_endpoint_name = module.sagemaker.endpoint_name
-  lambda_zip_path         = "C:/Users/BHUMIREDDY RAJAREDDY/terraform/llm-sagemaker-deploy/lambda_function/lambda_function.zip"
+  lambda_zip_path         = "/home/ec2-user/llm-sagemaker-deployment/llm-sagemaker/lambda_function/lambda_function.zip"
 }
 
 

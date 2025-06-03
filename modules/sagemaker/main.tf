@@ -56,6 +56,10 @@ resource "aws_sagemaker_model" "llm_model" {
   primary_container {
     image          = var.model_image
     model_data_url = var.model_data_url
+     environment = {
+      SAGEMAKER_PROGRAM           = "serve.py"
+      SAGEMAKER_SUBMIT_DIRECTORY  = var.model_data_url
+    }
   }
 }
 
