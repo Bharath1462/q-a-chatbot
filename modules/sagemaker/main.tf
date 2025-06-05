@@ -7,9 +7,9 @@ resource "aws_iam_role" "sagemaker_exec" {
       {
         Effect = "Allow",
         Principal = {
-          Service = "sagemaker.amazonaws.com"
+          Service = ["sagemaker.amazonaws.com"]
         },
-        Action = "sts:AssumeRole"
+        Action = ["sts:AssumeRole"]
       }
     ]
   })
@@ -36,8 +36,8 @@ resource "aws_iam_policy" "sagemaker_s3_cloudwatch_access" {
           "s3:PutObject"
         ],
         Resource = [
-          "arn:aws:s3:::mode-artifacts-bucket-1",
-          "arn:aws:s3:::mode-artifacts-bucket-1/*"
+          "arn:aws:s3:::ml-artifacts-bucket-1",
+          "arn:aws:s3:::ml-artifacts-bucket-1/*"
         ]
       },
       {
