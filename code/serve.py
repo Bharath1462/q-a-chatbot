@@ -26,8 +26,18 @@ except Exception as e:
 @app.route("/ping", methods=["GET"])
 def ping():
     logger.info("Ping endpoint called")
-    # Return 200 to pass health check, even if model is not loaded
-    return Response("pong", status=200)
+    if model is None:
+        logger.error("Health check failed: Model not loaded")
+        return Response("Model not loaded", status=500)
+    try:
+        # Perform a basic model check
+        test_input = {"question": "test"}
+        predict_fn(test_input, model)
+        logger.info("Health check passed")
+        return Response("OK", status=200)
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}")
+        return Response(str(e), status=500)
 
 @app.route("/invocations", methods=["POST"])
 def invoke():

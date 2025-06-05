@@ -13,7 +13,11 @@ RUN pip install flask
 # Copy source code
 COPY code/serve.py /opt/program/serve.py
 COPY code/interface.py /opt/program/interface.py
+COPY code/chatbot.py /opt/program/chatbot.py
 COPY data/questions_answers.csv /opt/program/questions_answers.csv
+
+# Make all Python files executable
+RUN chmod +x /opt/program/*.py
 # Make serve.py executable
 RUN chmod +x /opt/program/serve.py
 
