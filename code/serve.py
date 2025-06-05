@@ -1,8 +1,15 @@
 
 from flask import Flask, request, Response, jsonify
-from interface import model_fn, predict_fn
 import logging
 import sys
+import os
+
+# Add the current directory to Python path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
+from interface import model_fn, predict_fn
 
 # Configure logging for CloudWatch
 logging.basicConfig(

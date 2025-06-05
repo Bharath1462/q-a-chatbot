@@ -10,25 +10,33 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 # Install Flask (if not in requirements.txt)
 RUN pip install flask
 
+# Create directories
+RUN mkdir -p /opt/ml/model && mkdir -p /opt/ml/code
+
 # Copy source code
-COPY code/serve.py /opt/program/serve.py
-COPY code/interface.py /opt/program/interface.py
-COPY code/chatbot.py /opt/program/chatbot.py
-COPY data/questions_answers.csv /opt/program/questions_answers.csv
+COPY code/serve.py /opt/program/
+COPY code/interface.py /opt/program/
+COPY code/chatbot.py /opt/program/
+COPY data/questions_answers.csv /opt/program/
 
-# Make all Python files executable
+# Copy files to code directory for SageMaker
+RUN cp /opt/program/serve.py /opt/ml/code/
+RUN cp /opt/program/interface.py /opt/ml/code/
+RUN cp /opt/program/chatbot.py /opt/ml/code/
+RUN cp /opt/program/questions_answers.csv /opt/ml/code/
+
+# Make files executable
 RUN chmod +x /opt/program/*.py
-# Make serve.py executable
-RUN chmod +x /opt/program/serve.py
+RUN chmod +x /opt/ml/code/*.py
 
-# Create model directory
-RUN mkdir -p /opt/ml/model
-RUN mkdir -p /opt/ml/code
 # Required env for SageMaker inference
 ENV PYTHONUNBUFFERED=TRUE
+ENV PYTHONPATH=/opt/program:/opt/ml/code
 ENV SAGEMAKER_PROGRAM=serve.py
 ENV SAGEMAKER_SUBMIT_DIRECTORY=/opt/ml/code
+ENV LOG_LEVEL=DEBUG
 
 # Required for SageMaker to run your container
+WORKDIR /opt/program
 ENTRYPOINT ["python"]
-CMD ["serve.py"]
+CMD ["/opt/program/serve.py"]
