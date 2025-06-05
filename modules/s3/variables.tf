@@ -1,5 +1,10 @@
 variable "bucket_name" {
-  description = "The name of the S3 bucket to create"
+  description = "Name of the S3 bucket"
   type        = string
-  default = "ml-artifacts-bucket"
+}
+
+variable "create_bucket" {
+  description = "Set to false if bucket already exists, true to create new bucket"
+  type        = bool
+  default     = true
 }
