@@ -1,5 +1,5 @@
 resource "aws_iam_role" "sagemaker_exec" {
-  name = "sagemaker-execution-role"
+  name = "sagemaker-execution-role-2"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -82,7 +82,7 @@ resource "aws_sagemaker_endpoint_configuration" "llm_config" {
     variant_name           = "AllTraffic"
     model_name             = aws_sagemaker_model.llm_model.name
     initial_instance_count = 1
-    instance_type          = "ml.g5.xlarge"  # Upgraded for LLMs
+    instance_type          = "ml.g4dn.xlarge"  # Upgraded for LLMs
   }
 }
 
