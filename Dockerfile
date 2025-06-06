@@ -17,17 +17,21 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 RUN mkdir -p /opt/ml/model
 RUN mkdir -p /opt/ml/code
 
-# Copy source code to both locations for redundancy
-COPY code/serve.py /opt/program/
-COPY code/interface.py /opt/program/
-COPY code/chatbot.py /opt/program/
-COPY data/questions_answers.csv /opt/program/
+# Create required directories
+RUN mkdir -p /opt/ml/model
+RUN mkdir -p /opt/ml/code
 
-# Also copy to /opt/ml/code as required by SageMaker
+# Copy source code to SageMaker code directory
 COPY code/serve.py /opt/ml/code/
 COPY code/interface.py /opt/ml/code/
 COPY code/chatbot.py /opt/ml/code/
 COPY data/questions_answers.csv /opt/ml/code/
+
+# Make scripts executable
+RUN chmod +x /opt/ml/code/serve.py
+
+# Create symbolic link from /opt/program to /opt/ml/code
+RUN ln -s /opt/ml/code /opt/program/code
 
 # Ensure serve.py is executable in both locations
 RUN chmod +x /opt/program/serve.py

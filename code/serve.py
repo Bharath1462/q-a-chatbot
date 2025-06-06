@@ -85,10 +85,36 @@ def invoke():
 
 if __name__ == "__main__":
     # Log startup information
-    logger.info(f"Starting server")
+    logger.info("Starting server with gunicorn")
+    
+    # Change to the code directory
+    os.chdir('/opt/program/code')
     logger.info(f"Working directory: {os.getcwd()}")
     logger.info(f"Directory contents: {os.listdir('.')}")
     logger.info(f"Python path: {sys.path}")
     
-    # SageMaker uses port 8080
-    app.run(host='0.0.0.0', port=8080)
+    # Use gunicorn for production
+    import multiprocessing
+    from gunicorn.app.base import BaseApplication
+
+    class StandaloneApplication(BaseApplication):
+        def __init__(self, app, options=None):
+            self.options = options or {}
+            self.application = app
+            super().__init__()
+
+        def load_config(self):
+            for key, value in self.options.items():
+                self.cfg.set(key.lower(), value)
+
+        def load(self):
+            return self.application
+
+    options = {
+        'bind': '%s:%s' % ('0.0.0.0', '8080'),
+        'workers': multiprocessing.cpu_count(),
+        'timeout': 120,
+        'worker_class': 'sync'
+    }
+    
+    StandaloneApplication(app, options).run()

@@ -13,13 +13,13 @@ def model_fn(model_dir):
         # Load the embeddings model
         logger.info("Loading SentenceTransformer model...")
         model = SentenceTransformer('all-MiniLM-L6-v2')
-        
-        # Try multiple possible locations for the CSV file
+          # Try multiple possible locations for the CSV file
         possible_paths = [
             os.path.join(os.path.dirname(__file__), 'questions_answers.csv'),
+            '/opt/program/data/questions_answers.csv',
             '/opt/program/code/questions_answers.csv',
-            '/opt/program/questions_answers.csv',
-            '/opt/ml/code/questions_answers.csv'
+            '/opt/ml/code/questions_answers.csv',
+            '/opt/ml/model/questions_answers.csv'
         ]
         
         df = None
