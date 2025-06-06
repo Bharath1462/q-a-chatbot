@@ -13,24 +13,35 @@ RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 # If Flask is not in requirements.txt, install it here (optional)
 # RUN pip install flask
 
-# Copy source code
-COPY code/serve.py .
-COPY code/interface.py .
-COPY data/questions_answers.csv .
-
-# Ensure serve.py is executable
-RUN chmod +x serve.py
-
-# Optional: Create model and code directories (if your code uses them)
+# Create required directories
 RUN mkdir -p /opt/ml/model
 RUN mkdir -p /opt/ml/code
+
+# Copy source code to both locations for redundancy
+COPY code/serve.py /opt/program/
+COPY code/interface.py /opt/program/
+COPY code/chatbot.py /opt/program/
+COPY data/questions_answers.csv /opt/program/
+
+# Also copy to /opt/ml/code as required by SageMaker
+COPY code/serve.py /opt/ml/code/
+COPY code/interface.py /opt/ml/code/
+COPY code/chatbot.py /opt/ml/code/
+COPY data/questions_answers.csv /opt/ml/code/
+
+# Ensure serve.py is executable in both locations
+RUN chmod +x /opt/program/serve.py
+RUN chmod +x /opt/ml/code/serve.py
 
 # Environment variables required by SageMaker
 ENV PYTHONUNBUFFERED=TRUE
 ENV SAGEMAKER_PROGRAM=serve.py
 ENV SAGEMAKER_SUBMIT_DIRECTORY=/opt/ml/code
+ENV FLASK_APP=serve.py
+ENV FLASK_ENV=production
 
-# Set entry point and default command
+# Set working directory and entry point
+WORKDIR /opt/program
 ENTRYPOINT ["python"]
-CMD ["./serve.py"]
+CMD ["/opt/program/serve.py"]
 

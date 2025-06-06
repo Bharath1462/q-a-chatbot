@@ -44,6 +44,30 @@ def model_fn(model_dir):
         raise RuntimeError(f"Failed to load model: {str(e)}")
 
 def predict_fn(input_data, model):
-    question = input_data.get("question")
-    answer = get_best_answer(question)
-    return {"answer": answer}
+    try:
+        if not isinstance(input_data, dict) or "question" not in input_data:
+            raise ValueError("Input must be a dictionary with a 'question' key")
+        
+        question = input_data["question"]
+        if not isinstance(question, str):
+            raise ValueError("Question must be a string")
+            
+        # Encode the input question
+        question_embedding = model.encode(question, convert_to_tensor=True)
+        
+        # Find the most similar question in our dataset
+        from torch import nn
+        cos = nn.CosineSimilarity(dim=1)
+        similarities = cos(question_embedding.unsqueeze(0), model.question_embeddings)
+        
+        # Get the most similar question's index
+        most_similar_idx = similarities.argmax().item()
+        
+        # Get the corresponding answer
+        answer = model.df.iloc[most_similar_idx]['answer']
+        
+        return {"answer": answer, "confidence": similarities[most_similar_idx].item()}
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"Prediction failed: {str(e)}")
+        raise

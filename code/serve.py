@@ -32,19 +32,38 @@ except Exception as e:
 
 @app.route("/ping", methods=["GET"])
 def ping():
+    """Health check endpoint required by SageMaker."""
     logger.info("Ping endpoint called")
+    
+    # Check if model is loaded
     if model is None:
-        logger.error("Health check failed: Model not loaded")
-        return Response("Model not loaded", status=500)
+        error_msg = "Health check failed: Model not loaded"
+        logger.error(error_msg)
+        return Response(error_msg, status=500)
+    
     try:
+        # Log model information
+        logger.info(f"Model type: {type(model)}")
+        logger.info(f"Model attributes: {dir(model)}")
+        
+        # Verify model has required attributes
+        if not hasattr(model, 'df') or not hasattr(model, 'question_embeddings'):
+            error_msg = "Health check failed: Model missing required attributes"
+            logger.error(error_msg)
+            return Response(error_msg, status=500)
+        
         # Perform a basic model check
         test_input = {"question": "test"}
-        predict_fn(test_input, model)
+        result = predict_fn(test_input, model)
+        logger.info(f"Test prediction successful: {result}")
+        
         logger.info("Health check passed")
         return Response("OK", status=200)
     except Exception as e:
-        logger.error(f"Health check failed: {str(e)}")
-        return Response(str(e), status=500)
+        import traceback
+        error_msg = f"Health check failed: {str(e)}\n{traceback.format_exc()}"
+        logger.error(error_msg)
+        return Response(error_msg, status=500)
 
 @app.route("/invocations", methods=["POST"])
 def invoke():
@@ -65,5 +84,11 @@ def invoke():
         return Response(f"Inference error: {str(e)}", status=500)
 
 if __name__ == "__main__":
-    logger.info("Starting Flask server on port 8080")
-    app.run(host="0.0.0.0", port=8080)
+    # Log startup information
+    logger.info(f"Starting server")
+    logger.info(f"Working directory: {os.getcwd()}")
+    logger.info(f"Directory contents: {os.listdir('.')}")
+    logger.info(f"Python path: {sys.path}")
+    
+    # SageMaker uses port 8080
+    app.run(host='0.0.0.0', port=8080)
