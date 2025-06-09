@@ -28,6 +28,6 @@ module "s3" {
   source         = "./modules/s3"
   bucket_name    = var.bucket_name
   create_bucket  = false  # Set to false since the bucket already exists
-  model_file_path = "${path.root}/model.tar.gz"
+  model_file_path = "${path.root}/code.tar.gz"
 }
 
