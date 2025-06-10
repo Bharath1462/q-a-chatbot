@@ -43,7 +43,8 @@ resource "aws_s3_bucket_policy" "allow_sagemaker_access" {
 resource "aws_s3_object" "model_upload" {
   count  = var.create_bucket && var.model_file_path != null ? 1 : 0
   bucket = aws_s3_bucket.model_artifacts[0].id
-  key    = "code.tar.gz"
+  key    = "qa.tar.gz"
   source = var.model_file_path
   etag   = filemd5(var.model_file_path)
 }
+
